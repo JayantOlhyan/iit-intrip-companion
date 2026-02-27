@@ -1,0 +1,27 @@
+{
+  "id": "trip_001",
+  "traveler_name": "Jayant",
+  "products": [
+    {
+      "id": "prod_flight_01",
+      "type": "flight",
+      "title": "Flight BA123 to London",
+      "start_time": "2026-02-27T19:30:00Z",
+      "end_time": "2026-02-27T23:30:00Z",
+      "meta": {
+        "delay_minutes": 0,
+        "airline": "British Airways"
+      }
+    },
+    {
+      "id": "prod_hotel_01",
+      "type": "hotel",
+      "title": "The Ritz London",
+      "start_time": "2026-02-27T22:00:00Z",
+      "end_time": "2026-03-02T11:00:00Z",
+      "meta": {
+        "confirmation_code": "RTZ8899"
+      }
+    }
+  ]
+}
