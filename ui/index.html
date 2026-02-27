@@ -1,12 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Intrip Companion</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .response-area {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .answer {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .cards-container {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+
+        .card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .card p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            padding: 8px 16px;
+            background-color: #e8f4f8;
+            color: #2980b9;
+            border: 1px solid #b3d4fc;
+            border-radius: 20px;
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .action-button:hover {
+            background-color: #d1e8ff;
+        }
+
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            display: none;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Welcome to Intrip Companion</h1>
-    <p>This is a placeholder UI.</p>
+    <h1>✈️ Intrip Companion</h1>
+
+    <div class="chat-container">
+        <form id="chat-form" class="message-form">
+            <input type="text" id="message-input"
+                placeholder="Ask something about your trip (e.g. 'Can you check my flight status?')" required>
+            <button type="submit">Send</button>
+        </form>
+
+        <div id="loading" class="loading">Consulting agent...</div>
+
+        <div class="response-area" id="response-area" style="display: none;">
+            <div id="answer-container" class="answer"></div>
+            <div id="cards-container" class="cards-container"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('chat-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const message = document.getElementById('message-input').value;
+            const loading = document.getElementById('loading');
+            const responseArea = document.getElementById('response-area');
+            const answerContainer = document.getElementById('answer-container');
+            const cardsContainer = document.getElementById('cards-container');
+
+            if (!message) return;
+
+            loading.style.display = 'block';
+            responseArea.style.display = 'none';
+            answerContainer.innerHTML = '';
+            cardsContainer.innerHTML = '';
+
+            try {
+                const res = await fetch('http://127.0.0.1:8000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ trip_id: "demo", message: message })
+                });
+
+                if (!res.ok) throw new Error('API Error');
+
+                const data = await res.json();
+
+                // Render LLM answer
+                answerContainer.textContent = data.answer;
+
+                // Render cards
+                if (data.cards && data.cards.length > 0) {
+                    data.cards.forEach(card => {
+                        const cardEl = document.createElement('div');
+                        cardEl.className = 'card';
+
+                        const titleEl = document.createElement('h3');
+                        titleEl.textContent = card.title;
+
+                        const msgEl = document.createElement('p');
+                        msgEl.textContent = card.message;
+
+                        const actsEl = document.createElement('div');
+                        actsEl.className = 'card-actions';
+
+                        card.actions.forEach(act => {
+                            const btn = document.createElement('button');
+                            btn.className = 'action-button';
+                            btn.textContent = act.label;
+                            btn.onclick = () => alert(`Triggering action: ${act.action_type}`);
+                            actsEl.appendChild(btn);
+                        });
+
+                        cardEl.appendChild(titleEl);
+                        cardEl.appendChild(msgEl);
+                        cardEl.appendChild(actsEl);
+                        cardsContainer.appendChild(cardEl);
+                    });
+                }
+
+                responseArea.style.display = 'flex';
+
+            } catch (err) {
+                alert(`Error: ${err.message}. Please make sure the FastAPI backend is running!`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+    </script>
 </body>
+
 </html>
