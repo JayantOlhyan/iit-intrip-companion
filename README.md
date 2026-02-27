@@ -23,5 +23,5 @@ Phase 1 bootstrap of the repo and environment for the trip companion service.
    ```
 5. **Run tests**:
    ```bash
-   pytest
+   python -m pytest -q
    ```
