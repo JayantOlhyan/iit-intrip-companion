@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from app.models import Trip, ChatRequest, ChatResponse, Card
 from app.engine import compute_nudges
-from app.llm import generate_text
+from app.llm import generate_chat_answer
 
 load_dotenv()
 
@@ -60,7 +60,7 @@ def chat_with_agent(request: ChatRequest):
     
     # Generate conversational answer from LLM
     try:
-        llm_response = generate_text(request.message)
+        llm_response = generate_chat_answer(trip, request.message)
     except Exception as e:
         llm_response = f"I am unable to answer right now: {str(e)}"
         
